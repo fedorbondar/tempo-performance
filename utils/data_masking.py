@@ -30,7 +30,8 @@ class DataMasking:
         self.masks[column_name] = masking_map
         self.unmasks[column_name] = unmasking_map
 
-        self.masked_data = self.masked_data.replace({column_name: masking_map})
+        # pd.Series.map is faster than pd.DataFrame.replace in this case
+        self.masked_data[column_name] = self.masked_data[column_name].map(masking_map.get)
 
     def get_masked_data(self):
         return self.masked_data

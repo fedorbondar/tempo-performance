@@ -16,7 +16,9 @@ class DataLoader:
 
     def __load_data(self):
         data = pd.read_csv(self.path, encoding='utf-8', index_col=0)
-        data.drop(columns=self.ignore_columns, inplace=True)
+        for column in self.ignore_columns:
+            if column in data.columns:
+                data.drop(columns=self.ignore_columns, inplace=True)
         self.data = data
 
     def get_data(self):
