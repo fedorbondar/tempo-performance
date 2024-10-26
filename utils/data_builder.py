@@ -23,6 +23,15 @@ class DataBuilder:
 
         return result_data
 
+    def get_domain_worklog_in_period(self, domain: str, date_from: str, date_until: str):
+        datetime_from = datetime.strptime(date_from + START_DAY_TIME, DATETIME_FORMAT)
+        datetime_until = datetime.strptime(date_until + END_DAY_TIME, DATETIME_FORMAT)
+
+        result_data = self.data.loc[self.data['domain'] == domain]
+        result_data = result_data.loc[self.data['updated'] >= datetime_from].loc[self.data['updated'] <= datetime_until]
+
+        return result_data
+
     def create_series_logged_time(self, author: str, date_from: str, date_until: str):
         datetime_from = datetime.strptime(date_from + START_DAY_TIME, DATETIME_FORMAT).date()
         datetime_until = datetime.strptime(date_until + END_DAY_TIME, DATETIME_FORMAT).date()
