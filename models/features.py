@@ -1,10 +1,12 @@
-from arch.unitroot import PhillipsPerron
 from datetime import date
 import numpy as np
 import pandas as pd
+
 from scipy.signal import periodogram, welch
 import scipy.stats as stats
+from arch.unitroot import PhillipsPerron
 from statsmodels.tsa.stattools import adfuller, kpss
+from statsmodels.tsa.vector_ar.vecm import coint_johansen
 
 
 def compute_acf(data: pd.Series):
@@ -59,3 +61,45 @@ def get_fstats_in_peak(data: pd.Series, peak: date = None):
     p_value = stats.f.cdf(f_value, df1, df2)
 
     return data[peak], p_value
+
+
+def get_mean_var(data: pd.Series):
+    return np.mean(data), np.var(data)
+
+
+def get_week_daily_means(data: pd.Series, ignore_weekends: bool = False):
+    if ignore_weekends:
+        result = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0}
+    else:
+        result = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}
+
+    for key in result.keys():
+        sum_values = 0
+        n_values = 0
+        for idx in data.index:
+            if idx.weekday() == key:
+                sum_values += data.iloc[key]
+                n_values += 1
+        if n_values == 0:
+            result[key] = 0
+        else:
+            result[key] = sum_values / n_values
+
+    return result
+
+
+def get_co_integration(data: pd.Series, patterns: list[str] = None):
+    if patterns is None:
+        patterns = ['daily']
+
+    result = dict()
+
+    for pattern in patterns:
+        if pattern == 'daily':
+            daily_series = pd.Series([8.0] * (len(data) - 1) + [0.0], index=data.index)
+            johansen = coint_johansen(pd.DataFrame([data, daily_series]).T, 0, 1)
+            traces = johansen.lr1
+            critical_values = johansen.cvt
+            result['daily'] = [1 if traces[0] > critical_value else 0 for critical_value in critical_values[0]]
+
+    return result
