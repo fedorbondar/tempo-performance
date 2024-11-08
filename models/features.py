@@ -27,7 +27,8 @@ def get_k_periods(data: pd.Series, k: int, method: str = 'periodogram'):
     return [lag for _, lag in values_and_lags[:k]]
 
 
-def get_stationary_tests_results(data: pd.Series, methods: list[str] = None, regression: list[str] = None):
+def get_stationary_tests_results(data: pd.Series, methods: list[str] = None, regression: list[str] = None,
+                                 significance_level: float = 0.05):
     if methods is None:
         methods = ['adf']
     if regression is None:
@@ -38,11 +39,14 @@ def get_stationary_tests_results(data: pd.Series, methods: list[str] = None, reg
     for method in methods:
         for regressor in regression:
             if method == 'adf':
-                results[method + '_' + regressor] = adfuller(data, regression=regressor)[1]
-            elif method == 'kpss' and regressor != 'ctt':
-                results[method + '_' + regressor] = kpss(data, regression=regressor)[1]
-            elif method == 'pp' and regressor != 'ctt':
-                results[method + '_' + regressor] = PhillipsPerron(data, trend=regressor).pvalue
+                results[method + '_' + regressor] = adfuller(data, regression=regressor)[1] > significance_level
+            elif (method == 'kpss' or method == 'pp') and regressor == 'ctt':
+                continue
+            elif method == 'kpss':
+                results[method + '_' + regressor] = kpss(data, regression=regressor)[1] < significance_level
+            elif method == 'pp':
+                results[method + '_' + regressor] = PhillipsPerron(data, trend=regressor).pvalue > significance_level
+            results[method + '_' + regressor] = 1 if results[method + '_' + regressor] else 0
 
     return results
 
@@ -88,18 +92,31 @@ def get_week_daily_means(data: pd.Series, ignore_weekends: bool = False):
     return result
 
 
-def get_co_integration(data: pd.Series, patterns: list[str] = None):
+def get_co_integration(data: pd.Series, patterns: list[str] = None, ignore_weekends: bool = False):
     if patterns is None:
         patterns = ['daily']
+
+    start_day_of_week = data.index[0].weekday()
 
     result = dict()
 
     for pattern in patterns:
         if pattern == 'daily':
-            daily_series = pd.Series([8.0] * (len(data) - 1) + [0.0], index=data.index)
-            johansen = coint_johansen(pd.DataFrame([data, daily_series]).T, 0, 1)
-            traces = johansen.lr1
-            critical_values = johansen.cvt
-            result['daily'] = [1 if traces[0] > critical_value else 0 for critical_value in critical_values[0]]
+            daily_pattern = [8.0] * 5 if ignore_weekends else [8.0] * 5 + [0.0] * 2
+            daily_pattern *= 2 * len(data) // len(daily_pattern)
+            daily_pattern = daily_pattern[start_day_of_week: start_day_of_week + len(data)]
+            # avoid absolute constant pattern
+            daily_pattern[-1] = 0.0
+            compare_series = pd.Series(daily_pattern, index=data.index)
+        if pattern == 'weekly':
+            weekly_pattern = [0.0] * 4 + [40.0] if ignore_weekends else [0.0] * 4 + [40.0] + [0.0] * 2
+            weekly_pattern *= 2 * len(data) // len(weekly_pattern)
+            weekly_pattern = weekly_pattern[start_day_of_week: start_day_of_week + len(data)]
+            compare_series = pd.Series(weekly_pattern, index=data.index)
+
+        johansen = coint_johansen(pd.DataFrame([data, compare_series]).T, 0, 1)
+        traces = johansen.lr1
+        critical_values = johansen.cvt
+        result[pattern] = [1 if traces[0] > critical_value else 0 for critical_value in critical_values[0]]
 
     return result

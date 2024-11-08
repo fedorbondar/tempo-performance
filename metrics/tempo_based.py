@@ -1,10 +1,19 @@
 from datetime import datetime, timedelta
 import pandas as pd
 
-from utils.data_builder import DATETIME_FORMAT, START_DAY_TIME, END_DAY_TIME
+from utils.data_builder import DataBuilder, DATETIME_FORMAT, START_DAY_TIME, END_DAY_TIME
 
 SUPPORT_ISSUE_TYPES = ['Bug', 'Bug from CLM', 'Defect', 'Error', 'Incident', 'Accident']
 ABSENCE_ISSUE_KEYS = ['отпуск', 'отгул', 'отсутствия']
+
+WEIGHTED_METRIC_STRATEGIES = {
+    'even': {
+        'icr': 0.25,
+        'suptr': 0.25,
+        'ar': 0.25,
+        'isd': 0.25,
+    }
+}
 
 
 def check_absence_keys_in_issue(issue_summary: str):
@@ -43,3 +52,18 @@ def compute_absent_rate(data: pd.DataFrame, date_from: str, date_until: str):
 
 def compute_initiative_share_by_domain(data_author: pd.DataFrame, data_domain: pd.DataFrame):
     return len(data_author.issuekey.unique()) / len(data_domain.issuekey.unique())
+
+
+def compute_weighted_target(db: DataBuilder, author: str, domain: str, date_from: str, date_until: str,
+                            strategy: str = 'even'):
+    data_author = db.get_employee_worklog_in_period(author, date_from, date_until)
+    data_domain = db.get_domain_worklog_in_period(domain, date_from, date_until)
+
+    icr = compute_initiative_completion_rate(data_author, date_from, date_until)
+    suptr = compute_support_tasks_rate(data_author, date_from, date_until)
+    ar = compute_absent_rate(data_author, date_from, date_until)
+    isd = compute_initiative_share_by_domain(data_author, data_domain)
+
+    weights = WEIGHTED_METRIC_STRATEGIES[strategy]
+
+    return icr * weights['icr'] + suptr * weights['suptr'] + ar * weights['ar'] + isd * weights['isd']
