@@ -17,6 +17,8 @@ WEIGHTED_METRIC_STRATEGIES = {
 
 
 def check_absence_keys_in_issue(issue_summary: str):
+    if issue_summary is None:
+        return False
     for key in ABSENCE_ISSUE_KEYS:
         if key in issue_summary.lower():
             return True
@@ -54,11 +56,7 @@ def compute_initiative_share_by_domain(data_author: pd.DataFrame, data_domain: p
     return len(data_author.issuekey.unique()) / len(data_domain.issuekey.unique())
 
 
-def compute_weighted_target(db: DataBuilder, author: str, domain: str, date_from: str, date_until: str,
-                            strategy: str = 'even'):
-    data_author = db.get_employee_worklog_in_period(author, date_from, date_until)
-    data_domain = db.get_domain_worklog_in_period(domain, date_from, date_until)
-
+def compute_weighted_target(data_author, data_domain, date_from: str, date_until: str, strategy: str = 'even'):
     icr = compute_initiative_completion_rate(data_author, date_from, date_until)
     suptr = compute_support_tasks_rate(data_author, date_from, date_until)
     ar = compute_absent_rate(data_author, date_from, date_until)

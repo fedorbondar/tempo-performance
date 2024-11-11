@@ -4,9 +4,27 @@ import pandas as pd
 
 from scipy.signal import periodogram, welch
 import scipy.stats as stats
+
 from arch.unitroot import PhillipsPerron
+from arch.utility.exceptions import InfeasibleTestException
+from statsmodels.tools.sm_exceptions import InterpolationWarning
+
 from statsmodels.tsa.stattools import adfuller, kpss
 from statsmodels.tsa.vector_ar.vecm import coint_johansen
+
+import warnings
+warnings.filterwarnings("ignore", category=InterpolationWarning)
+warnings.filterwarnings("ignore", category=RuntimeWarning)
+
+
+DEFAULT_CO_INTEGRATION_RESULT = {
+    'daily0': 1,
+    'daily1': 1,
+    'daily2': 1,
+    'weekly0': 1,
+    'weekly1': 1,
+    'weekly2': 1,
+}
 
 
 def compute_acf(data: pd.Series):
@@ -34,24 +52,35 @@ def get_stationary_tests_results(data: pd.Series, methods: list[str] = None, reg
     if regression is None:
         regression = ['c']
 
+    is_constant = len(data.unique()) == 1
+
     results = dict()
 
     for method in methods:
         for regressor in regression:
             if method == 'adf':
-                results[method + '_' + regressor] = adfuller(data, regression=regressor)[1] > significance_level
+                results[method + '_' + regressor] = (
+                    is_constant or adfuller(data, regression=regressor)[1] > significance_level
+                )
             elif (method == 'kpss' or method == 'pp') and regressor == 'ctt':
                 continue
             elif method == 'kpss':
-                results[method + '_' + regressor] = kpss(data, regression=regressor)[1] < significance_level
+                results[method + '_' + regressor] = (
+                    is_constant or kpss(data, regression=regressor)[1] < significance_level
+                )
             elif method == 'pp':
-                results[method + '_' + regressor] = PhillipsPerron(data, trend=regressor).pvalue > significance_level
+                try:
+                    results[method + '_' + regressor] = (
+                        is_constant or PhillipsPerron(data, trend=regressor).pvalue > significance_level
+                    )
+                except InfeasibleTestException:
+                    results[method + '_' + regressor] = 1
             results[method + '_' + regressor] = 1 if results[method + '_' + regressor] else 0
 
     return results
 
 
-def get_fstats_in_peak(data: pd.Series, peak: date = None):
+def get_fstats_in_peak(data: pd.Series, peak: date = None, significance_level: float = 0.05):
     if peak is None:
         peak = data.idxmax()
 
@@ -64,7 +93,7 @@ def get_fstats_in_peak(data: pd.Series, peak: date = None):
     df2 = len(group2) - 1
     p_value = stats.f.cdf(f_value, df1, df2)
 
-    return data[peak], p_value
+    return data[peak], p_value < significance_level
 
 
 def get_mean_var(data: pd.Series):
@@ -114,9 +143,14 @@ def get_co_integration(data: pd.Series, patterns: list[str] = None, ignore_weeke
             weekly_pattern = weekly_pattern[start_day_of_week: start_day_of_week + len(data)]
             compare_series = pd.Series(weekly_pattern, index=data.index)
 
-        johansen = coint_johansen(pd.DataFrame([data, compare_series]).T, 0, 1)
-        traces = johansen.lr1
-        critical_values = johansen.cvt
-        result[pattern] = [1 if traces[0] > critical_value else 0 for critical_value in critical_values[0]]
+        try:
+            johansen = coint_johansen(pd.DataFrame([data, compare_series]).T, 0, 1)
+            traces = johansen.lr1
+            critical_values = johansen.cvt
+            result_list = [1 if traces[0] > critical_value else 0 for critical_value in critical_values[0]]
+            for i, value in enumerate(result_list):
+                result[pattern + str(i)] = value
+        except np.linalg.LinAlgError:
+            return DEFAULT_CO_INTEGRATION_RESULT
 
     return result
