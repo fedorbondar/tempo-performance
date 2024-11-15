@@ -9,9 +9,11 @@ def create_dataset(db: DataBuilder, date_from: str, date_until: str, ignore_week
     domains_data = [db.get_domain_worklog_in_period(domain, date_from, date_until) for domain in domains]
 
     result = dict()
+    index = []
 
     for domain_data in domains_data:
         for author in domain_data['author'].unique():
+            index.append(author)
 
             # features
             author_time_series = db.create_series_logged_time(author, date_from, date_until, ignore_weekends)
@@ -47,4 +49,6 @@ def create_dataset(db: DataBuilder, date_from: str, date_until: str, ignore_week
         if not domain_data.empty:
             print(f'{domain_data["domain"].unique()[0]} proceeded')
 
-    return pd.DataFrame.from_dict(result)
+    result['author'] = index
+
+    return pd.DataFrame.from_dict(result).set_index('author')
