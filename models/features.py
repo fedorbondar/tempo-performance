@@ -65,16 +65,19 @@ def get_stationary_tests_results(data: pd.Series, methods: list[str] = None, reg
             elif (method == 'kpss' or method == 'pp') and regressor == 'ctt':
                 continue
             elif method == 'kpss':
-                results[method + '_' + regressor] = (
-                    is_constant or kpss(data, regression=regressor)[1] < significance_level
-                )
+                try:
+                    results[method + '_' + regressor] = (
+                        is_constant or kpss(data, regression=regressor)[1] < significance_level
+                    )
+                except OverflowError:
+                    results[method + '_' + regressor] = True
             elif method == 'pp':
                 try:
                     results[method + '_' + regressor] = (
                         is_constant or PhillipsPerron(data, trend=regressor).pvalue > significance_level
                     )
                 except InfeasibleTestException:
-                    results[method + '_' + regressor] = 1
+                    results[method + '_' + regressor] = True
             results[method + '_' + regressor] = 1 if results[method + '_' + regressor] else 0
 
     return results
