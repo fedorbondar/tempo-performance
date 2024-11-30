@@ -1,4 +1,6 @@
 from datetime import date
+from typing import Union
+
 import numpy as np
 import pandas as pd
 
@@ -77,6 +79,8 @@ def get_stationary_tests_results(data: pd.Series, methods: list[str] = None, reg
                         is_constant or PhillipsPerron(data, trend=regressor).pvalue > significance_level
                     )
                 except InfeasibleTestException:
+                    results[method + '_' + regressor] = True
+                except ValueError:
                     results[method + '_' + regressor] = True
             results[method + '_' + regressor] = 1 if results[method + '_' + regressor] else 0
 
