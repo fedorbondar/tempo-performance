@@ -1,0 +1,22 @@
+,issuekey,date,hour,author,comment,updated,issue_type,issue_summary,domain
+0,issuekey0,2024-10-01,7.5,author0,Working on issue,2024-10-01 12:44:24,Improvement,IMPR 1.1.1,domain0
+1,issuekey1,2024-10-01,0.5,author0,Working on issue,2024-10-01 12:44:41,Task,"Стендапы, статусы, планерки",domain0
+2,issuekey0,2024-10-02,7.5,author0,Working on issue,2024-10-02 15:06:17,Improvement,IMPR 1.1.1,domain0
+3,issuekey1,2024-10-02,0.5,author0,Working on issue,2024-10-02 15:06:27,Task,"Стендапы, статусы, планерки",domain0
+4,issuekey0,2024-10-04,7.0,author0,Working on issue,2024-10-07 11:20:10,Improvement,IMPR 1.1.1,domain0
+5,issuekey0,2024-10-03,7.5,author0,Working on issue,2024-10-07 11:19:56,Improvement,IMPR 1.1.1,domain0
+6,issuekey0,2024-10-07,7.5,author0,Working on issue,2024-10-07 11:21:00,Improvement,IMPR 1.1.1,domain0
+7,issuekey0,2024-10-08,7.5,author0,Working on issue,2024-10-08 13:56:30,Improvement,IMPR 1.1.1,domain0
+8,issuekey0,2024-10-09,7.5,author0,исправление неправильно запускающихся тестов,2024-10-11 11:27:28,Improvement,IMPR 1.1.1,domain0
+9,issuekey0,2024-10-10,7.5,author0,Исправление ошибки при поднятии базы данных,2024-10-11 11:26:20,Improvement,IMPR 1.1.1,domain0
+10,issuekey0,2024-10-11,7.0,author0,"работа и дебаг с запуском и покрытием тестов, обновление зависимостей",2024-10-11 14:22:43,Improvement,IMPR 1.1.1,domain0
+11,issuekey0,2024-10-14,7.5,author0,"выправка юнит тестов, коррекция проверки на запуск базы данных",2024-10-14 15:22:20,Improvement,IMPR 1.1.1,domain0
+12,issuekey1,2024-10-08,0.5,author0,Working on issue,2024-10-08 13:56:12,Task,"Стендапы, статусы, планерки",domain0
+13,issuekey1,2024-10-03,0.5,author0,Working on issue,2024-10-07 11:20:29,Task,"Стендапы, статусы, планерки",domain0
+14,issuekey1,2024-10-04,1.0,author0,Working on issue,2024-10-07 11:20:18,Task,"Стендапы, статусы, планерки",domain0
+15,issuekey1,2024-10-07,0.5,author0,Working on issue,2024-10-07 11:20:40,Task,"Стендапы, статусы, планерки",domain0
+16,issuekey1,2024-10-09,0.5,author0,Working on issue,2024-10-11 07:08:11,Task,"Стендапы, статусы, планерки",domain0
+17,issuekey1,2024-10-10,0.5,author0,Working on issue,2024-10-11 07:08:31,Task,"Стендапы, статусы, планерки",domain0
+18,issuekey1,2024-10-11,1.0,author0,Working on issue,2024-10-11 14:21:45,Task,"Стендапы, статусы, планерки",domain0
+19,issuekey1,2024-10-14,0.5,author0,Working on issue,2024-10-14 15:21:40,Task,"Стендапы, статусы, планерки",domain0
+20,issuekey2,2024-10-02,1.0,author1,Промежуточный статус,2024-10-02 14:12:03,Task,Коммуникации внутри домена,domain1
