@@ -4,6 +4,9 @@ DEFAULT_COLUMNS_TO_MASK = ['issuekey', 'author', 'domain']
 
 
 class DataMasking:
+    """
+    Class for applying masks on vulnerable corporate data. Only for data visibility purpose.
+    """
     def __init__(self, data: pd.DataFrame, columns: list = None):
         self.original_data: pd.DataFrame = data
         self.masked_data = self.original_data.copy()
@@ -18,6 +21,13 @@ class DataMasking:
             self.__create_masking(column_name)
 
     def __create_masking(self, column_name: str):
+        """
+        Creates masking by replacing column values with impersonal values.
+        Saves masked data as well as masking and unmasking dictionaries.
+
+        Example: column `author` values will be replaced with `author0, author1, author2` etc.
+        :param column_name: column name to apply masking on.
+        """
         unique_column_values = self.original_data[column_name].unique()
         masks = [column_name + str(idx) for idx in range(len(unique_column_values))]
 

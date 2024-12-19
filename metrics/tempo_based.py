@@ -46,6 +46,13 @@ def round_outliers(metric_value: float):
 
 
 def get_supposed_work_hours_by_period(date_from: str, date_until: str, full_time: bool = True):
+    """
+    Computes work hours that employee was supposed to log in period.
+    :param date_from: start date in period.
+    :param date_until: end date in period.
+    :param full_time: whether employee is working full-time or not.
+    :return: number of work hours.
+    """
     datetime_from = datetime.strptime(date_from + START_DAY_TIME, DATETIME_FORMAT).date()
     datetime_until = datetime.strptime(date_until + END_DAY_TIME, DATETIME_FORMAT).date()
     delta = datetime_until - datetime_from
@@ -56,27 +63,63 @@ def get_supposed_work_hours_by_period(date_from: str, date_until: str, full_time
 
 
 def compute_initiative_completion_rate(data: pd.DataFrame, date_from: str, date_until: str):
+    """
+    Compute initiative completion rate metric.
+    :param data: pd.DataFrame of `author`'s worklog logged from `date_from` to `date_until`.
+    :param date_from: start date in period.
+    :param date_until: end date in period.
+    :return: value of metric.
+    """
     max_hours_initiative = data.groupby('issuekey').hour.agg('sum').max()
     return round_outliers(1 - max_hours_initiative / get_supposed_work_hours_by_period(date_from, date_until))
 
 
 def compute_support_tasks_rate(data: pd.DataFrame, date_from: str, date_until: str):
+    """
+    Compute support tasks rate metric.
+    :param data: pd.DataFrame of `author`'s worklog logged from `date_from` to `date_until`.
+    :param date_from: start date in period.
+    :param date_until: end date in period.
+    :return: value of metric.
+    """
     tasks_hours_agg = data.groupby('issuekey').agg({'hour': 'sum', 'issue_type': 'first'})
     hours_support_issues = tasks_hours_agg.loc[tasks_hours_agg.issue_type.isin(SUPPORT_ISSUE_TYPES)].hour.sum()
     return round_outliers(1 - hours_support_issues / get_supposed_work_hours_by_period(date_from, date_until))
 
 
 def compute_absent_rate(data: pd.DataFrame, date_from: str, date_until: str):
+    """
+    Compute absent rate metric.
+    :param data: pd.DataFrame of `author`'s worklog logged from `date_from` to `date_until`.
+    :param date_from: start date in period.
+    :param date_until: end date in period.
+    :return: value of metric.
+    """
     tasks_hours_agg = data.groupby('issuekey').agg({'hour': 'sum', 'issue_summary': 'first'})
     absence_hours = tasks_hours_agg.loc[tasks_hours_agg.issue_summary.apply(check_absence_keys_in_issue)].hour.sum()
     return round_outliers(1 - absence_hours / get_supposed_work_hours_by_period(date_from, date_until))
 
 
 def compute_initiative_share_by_domain(data_author: pd.DataFrame, data_domain: pd.DataFrame):
+    """
+    Compute initiative share by domain metric.
+    :param data_author: pd.DataFrame of `author`'s worklog.
+    :param data_domain: pd.DataFrame of `domain` worklog.
+    :return: value of metric.
+    """
     return round_outliers(len(data_author.issuekey.unique()) / len(data_domain.issuekey.unique()))
 
 
 def compute_weighted_target(data_author, data_domain, date_from: str, date_until: str, strategy: str = 'even'):
+    """
+    Compute weighted metric with given `strategy`.
+    :param data_author: pd.DataFrame of `author`'s worklog.
+    :param data_domain: pd.DataFrame of `domain` worklog.
+    :param date_from: start date in period.
+    :param date_until: end date in period.
+    :param strategy: `even`, `initiative` or `absence`.
+    :return: value of weighted metric.
+    """
     icr = compute_initiative_completion_rate(data_author, date_from, date_until)
     suptr = compute_support_tasks_rate(data_author, date_from, date_until)
     ar = compute_absent_rate(data_author, date_from, date_until)

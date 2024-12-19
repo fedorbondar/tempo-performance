@@ -5,6 +5,17 @@ from utils.data_builder import DataBuilder
 
 def create_dataset_in_period(db: DataBuilder, date_from: str, date_until: str, ignore_weekends: bool = False,
                              n_periods: int = 3, strategy: str = 'even', add_single_metrics: bool = False):
+    """
+    Create dataset with features for all `domains` for all `authors` in specific period of time.
+    :param db: DataBuilder class object.
+    :param date_from: start date in period.
+    :param date_until: end date in period.
+    :param ignore_weekends: whether to ignore logged time during weekends or not.
+    :param n_periods: number of periods for "least k periods" computation.
+    :param strategy: `even`, `initiative` or `absence`.
+    :param add_single_metrics: whether to add single target metrics to dataset or just the value of weighted metric.
+    :return: pd.DataFrame dataset.
+    """
     domains = db.data['domain'].unique()
     domains_data = [db.get_domain_worklog_in_period(domain, date_from, date_until) for domain in domains]
 
@@ -66,6 +77,16 @@ def create_dataset_in_period(db: DataBuilder, date_from: str, date_until: str, i
 
 def create_dataset(db: DataBuilder, dates: list[tuple[str, str]], ignore_weekends: bool = False,
                    n_periods: int = 3, strategy: str = 'even', add_single_metrics: bool = False):
+    """
+    Wrap over `create_dataset_in_period`, allows to create dataset with multiple periods of time.
+    :param db: DataBuilder class object.
+    :param dates: list of pairs (<start date in period>, <end date in period>).
+    :param ignore_weekends: whether to ignore logged time during weekends or not.
+    :param n_periods: number of periods for "least k periods" computation.
+    :param strategy: `even` for equal weight of target metrics, `initiative` for initiative focus, `absence` for absence focus.
+    :param add_single_metrics: whether to add single target metrics to dataset or just the value of weighted metric.
+    :return: pd.DataFrame dataset.
+    """
     result = None
     for date_from, date_until in dates:
         dataset = create_dataset_in_period(db, date_from, date_until, ignore_weekends, n_periods, strategy,

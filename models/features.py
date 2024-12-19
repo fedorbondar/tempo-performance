@@ -1,5 +1,4 @@
 from datetime import date
-from typing import Union
 
 import numpy as np
 import pandas as pd
@@ -30,6 +29,11 @@ DEFAULT_CO_INTEGRATION_RESULT = {
 
 
 def compute_acf(data: pd.Series):
+    """
+    Manual computation of Auto-Correlation Function.
+    :param data: time series with physical `author`'s worklog.
+    :return: values of Auto-Correlation Function and number of lags used.
+    """
     n_lags = len(data) // 2 + 1
     values = pd.DataFrame(data.values)
     dataframe = pd.concat([values.shift(i) for i in range(n_lags)], axis=1)
@@ -38,6 +42,13 @@ def compute_acf(data: pd.Series):
 
 
 def get_k_periods(data: pd.Series, k: int, method: str = 'periodogram'):
+    """
+    Compute least k periods based on periodogram of given time series.
+    :param data: time series with physical `author`'s worklog.
+    :param k: number of periods.
+    :param method: either `periodogram` or `welch` (different methods to estimate power spectral density).
+    :return: list of k lags that are considered as values of periods.
+    """
     if method == 'periodogram':
         _, y = periodogram(data.values)
     else:
@@ -49,6 +60,14 @@ def get_k_periods(data: pd.Series, k: int, method: str = 'periodogram'):
 
 def get_stationary_tests_results(data: pd.Series, methods: list[str] = None, regression: list[str] = None,
                                  significance_level: float = 0.05):
+    """
+    Perform statistic tests to find given time series stationary or not.
+    :param data: time series with physical `author`'s worklog.
+    :param methods: tests to perform: Augmented Dickey-Fuller (`adf`), Kwiatkowski-Phillips-Schmidt-Shin (`kpss`) or Phillips-Perron (`pp`).
+    :param regression: types of regression used: constant (`c`), constant & trend (`ct`) or parabolic trend (`ctt`).
+    :param significance_level: level of significance to reject null hypothesis.
+    :return: dictionary with keys `<method>_<regressor>` and values as results of corresponding tests.
+    """
     if methods is None:
         methods = ['adf']
     if regression is None:
@@ -88,6 +107,13 @@ def get_stationary_tests_results(data: pd.Series, methods: list[str] = None, reg
 
 
 def get_fstats_in_peak(data: pd.Series, peak: date = None, significance_level: float = 0.05):
+    """
+    Perform Chow test for structural break.
+    :param data: time series with physical `author`'s worklog.
+    :param peak: supposed point of structural break in data (if set `None`, argmax in `data` is used).
+    :param significance_level: level of significance to reject null hypothesis.
+    :return: value of `data` in `peak` and either True if there is no structural break in `data` in `peak` or False.
+    """
     if peak is None:
         peak = data.idxmax()
 
@@ -104,10 +130,21 @@ def get_fstats_in_peak(data: pd.Series, peak: date = None, significance_level: f
 
 
 def get_mean_var(data: pd.Series):
+    """
+    Get mean and variance of data.
+    :param data: time series with physical `author`'s worklog.
+    :return: mean and variance values.
+    """
     return np.mean(data), np.var(data)
 
 
 def get_week_daily_means(data: pd.Series, ignore_weekends: bool = False):
+    """
+    Compute mean value of logged time for each day of week in `data`.
+    :param data: time series with physical `author`'s worklog.
+    :param ignore_weekends: whether to ignore logged time during weekends or not.
+    :return: dict with keys 0-4 or 0-6 corresponding to days of week consequently and mean values of logged time.
+    """
     if ignore_weekends:
         result = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0}
     else:
@@ -129,6 +166,13 @@ def get_week_daily_means(data: pd.Series, ignore_weekends: bool = False):
 
 
 def get_co_integration(data: pd.Series, patterns: list[str] = None, ignore_weekends: bool = False):
+    """
+    Perform Johansen co-integration test.
+    :param data: time series with physical `author`'s worklog.
+    :param patterns: either `daily` (`author` logs work every work day) or `weekly` (`author` logs work once a week).
+    :param ignore_weekends: whether to ignore logged time during weekends or not.
+    :return: dict with following keys: `<pattern>0` indicates if there is no co-integration relation, `<pattern>1` if there is one, `<pattern>2` if there is more than one.
+    """
     if patterns is None:
         patterns = ['daily']
 

@@ -4,6 +4,21 @@ DB_INDICES_COLUMN_NAME = 'Unnamed: 0'
 
 
 class DataLoader:
+    """
+    Class for reading Jira tempo csv data. Can ignore specified columns optionally.
+
+    Assumes csv data to contain the following columns:
+
+    * `issuekey` -- issue's short name in Jira.
+    * `date` -- date on which the work was logged on.
+    * `hour` -- amount of work hours logged on issue.
+    * `author` -- login of worker who logged time.
+    * `comment` -- comment left on logged time ("Worked on issue ..." by default).
+    * `updated` -- datetime of logging event.
+    * `issue_type` -- type of issue on which time was logged.
+    * `issue_summary` -- summary of issue on which time was logged.
+    * `domain` -- team which `author` belongs to.
+    """
     def __init__(self, path: str, ignore_columns: list = None):
         self.path = path
         self.data: pd.DataFrame
