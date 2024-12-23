@@ -60,3 +60,7 @@ against the alternative of a unit root. Journal of Econometrics, 54: 159-178.
 * Lütkepohl, H. 2005. New Introduction to Multiple Time Series Analysis. Springer.
 * Chow, Gregory C. Tests of Equality Between Sets of Coefficients in Two Linear Regressions — 1960. — Vol. 28. — P. 
 591—605.
+
+# License
+
+[MIT License](LICENSE)
