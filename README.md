@@ -1,4 +1,4 @@
-# tempo-performance (Work In Progress)
+# tempo-performance
 
 Research on employee productivity pattern based on their tempo worklog analysis.
 
